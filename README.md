@@ -1,108 +1,154 @@
-Docker container: JDK Alpine + Demo jar
+# HomeLab Gateway: Lightsail to Local Machine Bridge
 
-## Build the image
+**Target OS:** Amazon Linux 2023 (AL2023)  
+**Hardware Profile:** 512 MB RAM / 1 vCPU  
+**Core Stack:** Tailscale + Nginx + GoAccess + Fail2Ban
 
-```sh
-docker build -t demo_jdkalpine .
+This guide provides a memory-efficient way to use an AWS Lightsail instance as a public gateway for services running on a local machine (e.g., a NAS or Home Server) via a secure Tailscale tunnel.
+
+---
+
+## Phase 1: Resource Optimization (The Safety Net)
+**Reasoning:** AL2023 with 512MB RAM will crash during package installations or SSL generation without virtual memory. We must enable Swap first.
+
+```bash
+# 1. Create a 1GB swap file
+sudo dd if=/dev/zero of=/swapfile bs=1M count=1024
+sudo chmod 600 /swapfile
+sudo mkswap /swapfile
+sudo swapon /swapfile
+
+# 2. Persist swap across reboots
+echo '/swapfile swap swap defaults 0 0' | sudo tee -a /etc/fstab
+
+# 3. Verify memory status
+free -h
 ```
 
-## Running the container
-
-```sh
-docker run -p 8080:8080 demo_jdkapline
-```
-here ```8080:8080``` boot2dockerhost:dockercontainerhost, local port forwarding has to be done to access the application in local
-
-## Port forwarding
-
-Host ip - 127.0.0.1 
-
-hostport - 8080 (host machine port)
-
-guestpot - 8080 (boot2docker)
-
-## How to use
+## Phase 2: Private Networking (Tailscale)
+**Reasoning:** Tailscale creates an encrypted tunnel between your AWS VPS and your home machine without opening ports on your home router.
 
 ```
-curl -u suriya http://localhost:8181/demo/start
-```
-here ```suriya``` is _spring security username_ when prompted type password ```secret```
+# 1. Install Tailscale
+curl -fsSL [https://tailscale.com/install.sh](https://tailscale.com/install.sh) | sh
 
+# 2. Enable and start the daemon
+sudo systemctl enable --now tailscaled
 
-## Dockerfile
+# 3. Connect to your Tailnet
+# Follow the URL provided in the terminal to authenticate
+sudo tailscale up
 
-1. Pull jdk alpine
-2. Add the currnet jar to the app.jar
-3. Set the entrypoint and invoke the jar
-
-If needed the `ARG` can be used get values from cli as `--build-args`
-_eg_ 
-
-__Note__ 
-1. `COPY` and `ADD` are same .
-2. `-Djava.security.egd=file:/dev/./urandom` is set beacuse of the java bug. https://ruleoftech.com/2016/avoiding-jvm-delays-caused-by-random-number-generation
-
-## Useful docker commands
-
-* Build
-
-```sh
-docker build -t {tagname} -f {dockerfile} --build-args ORGKEY=orgvalue .
+# 4. Identify IPs
+# Note the 100.x.y.z IP of this VPS and your HOME machine
+tailscale status
 ```
 
-* Tag
+## Phase 3: Web Server & Monitoring Tools
+**Reasoning:** We use Nginx as the reverse proxy and GoAccess for a lightweight, real-time dashboard that uses significantly less RAM than heavy GUI alternatives.
 
-```sh
-docker tag {exisingtagname} {newtagname}
+```
+# 1. Install Nginx and GoAccess
+sudo dnf update -y
+sudo dnf install nginx goaccess -y
+
+# 2. Start Nginx
+sudo systemctl enable --now nginx
+
+# 3. Prepare Monitoring Directory
+sudo mkdir -p /var/www/html/monitor
+sudo chown nginx:nginx /var/www/html/monitor
 ```
 
-* Run
+## Phase 4: Reverse Proxy Configuration
+**Reasoning:** Configure Nginx to route traffic from the Public IP to your local Tailscale IP.
 
-```sh
-docker run -p 8080:8080 {image_id/image_name}
+- Create a new config: sudo nano /etc/nginx/conf.d/bridge.conf
+- Paste the following template (Replace 100.x.y.z:8080 with your actual local machine's Tailscale IP/Port):
+
+```
+server {
+    listen 80;
+    server_name _; # Responds to your Lightsail Static IP
+
+    # Primary Bridge to Home Lab
+    location / {
+        proxy_pass [http://100.](http://100.)x.y.z:8080; 
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        
+        # Optimization for low-RAM instances
+        proxy_buffer_size 12k;
+        proxy_buffers 4 24k;
+        proxy_busy_buffers_size 24k;
+    }
+
+    # Monitoring Dashboard (Protected: Tailscale Only)
+    location /monitor {
+        alias /var/www/html/monitor/;
+        index index.html;
+        allow 100.0.0.0/8; # Allow only Tailscale network
+        deny all;
+    }
+}
 ```
 
-* Show images
+- Test and Reload:
 
-```sh
-docker images
-docker images -a
 ```
-
-* Show containers
-```sh
-docker ps 
-docekr ps -a
+sudo nginx -t
+sudo systemctl reload nginx
 ```
 
-* Push
-```sh
-docker push {registryhostname/path/app:version}
+## Phase 5: Security Hardening
+**Reasoning:** Public IPs are targets for bots. These steps block unauthorized access.
+
+- Internal Firewall (Firewalld)
+
+```
+sudo dnf install firewalld -y
+sudo systemctl enable --now firewalld
+
+# Open Web ports
+sudo firewall-cmd --permanent --add-service=http
+sudo firewall-cmd --permanent --add-service=https
+# Allow Tailscale communication
+sudo firewall-cmd --permanent --add-port=41641/udp
+
+sudo firewall-cmd --reload
 ```
 
-* Pull
-```sh
-docker pull {registryhostname/path/app:version}
+- Intrusion Prevention (Fail2Ban)
+
+```
+# Install via Python's package manager for AL2023 compatibility
+sudo dnf install python3-pip -y
+sudo pip3 install fail2ban
+
+# Start basic protection
+sudo fail2ban-client -x start
 ```
 
-* Remove image
-```sh
-docker rm {imageid}
-```
-use comma for multiple images
-* Remove container
-```sh
-docker rm {containerid}
-```
-use comma for multiple containers
+- SSL Encryption (Certbot)
 
-* Inspect
-```sh
-docker exec -it {runningcontainerid} bash
+```
+sudo dnf install certbot python3-certbot-nginx -y
+sudo certbot --nginx
 ```
 
-* Prune
-```sh
-docker system prune
-docker system prune -a
+
+## Phase 6: Active Monitoring
+**Action:** Start the GoAccess background process to generate the live web dashboard.
+
 ```
+sudo goaccess /var/log/nginx/access.log -o /var/www/html/monitor/index.html --log-format=COMBINED --real-time-html --daemonize
+```
+
+## Maintenance & Verification
+
+- Check Bridge Health: tailscale status (Ensure home node is active; direct).
+- RAM Health: free -h (Verify swap is functioning).
+- Clear DNF Cache: sudo dnf clean all (Reduces disk and RAM overhead).
+- Access Monitor: Connect via Tailscale and visit http://[Lightsail-Tailscale-IP]/monitor.
