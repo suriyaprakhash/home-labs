@@ -1,8 +1,22 @@
-# HomeLab Gateway: Debian 12 to Local Machine Bridge
+Markdown Live Preview
+Reset
+Copy
+Export PDF
 
-# Pre-requisite
+8081828384858687909293949596979899100101898891777973747576676869707172616263646566605455565758594748495051525378
+# Phase 3: Web Server & Monitoring
+Debian's package names are slightly different for GoAccess dependencies.
 
 ```
+# 1. Install Nginx, GoAccess, Nginx UI
+sudo apt update
+sudo apt install nginx goaccess -y
+# curl -L -s https://githubusercontent.com | sudo bash -s -- install
+
+# 2. Prepare Monitoring Directory
+
+HomeLab Gateway: Debian 12 to Local Machine Bridge
+Pre-requisite
 1. Create the user
 Switch to root (su -) if you aren't already, then run:
 
@@ -17,13 +31,9 @@ usermod -aG sudo suriya
 
 4. Switch to your new user
 su - suriya
-```
-
-
-# Phase 1: Resource Optimization (Swap)
+Phase 1: Resource Optimization (Swap)
 Debian handles swap similarly, but it is critical for 512MB RAM instances to avoid "Out of Memory" (OOM) errors during apt upgrades or Certbot runs.
 
-```
 # 1. Create a 2GB swap file (1M * 2048 = 2GB)
 sudo dd if=/dev/zero of=/swapfile bs=1M count=2048
 
@@ -38,21 +48,16 @@ sudo swapon /swapfile
 
 # 5. Verify the new size
 free -h
-```
-
-# Phase 2: Private Networking (Tailscale)
+Phase 2: Private Networking (Tailscale)
 The installation script works perfectly on Debian.
 
-```
 # Install Tailscale
 curl -fsSL https://tailscale.com/install.sh | sh
 
 # Start and Authenticate
 sudo tailscale up --advertise-exit-node
-```
-
 Now on the vps to allow forward so that you could use it as a exit node
-```
+
 # Update sysctl.conf
 sudo nano /etc/sysctl.conf
 
@@ -64,32 +69,25 @@ net.ipv6.conf.all.forwarding=1
 
 # Force apply
 sudo sysctl -p
-```
-
-
-# Phase 3: Web Server & Monitoring
+Phase 3: Web Server & Monitoring
 Debian's package names are slightly different for GoAccess dependencies.
 
-```
-# 1. Install Nginx and GoAccess
+# 1. Install Nginx, GoAccess, Nginx UI
 sudo apt update
 sudo apt install nginx goaccess -y
+# curl -L -s https://githubusercontent.com | sudo bash -s -- install
 
 # 2. Prepare Monitoring Directory
 sudo mkdir -p /var/www/html/monitor
 sudo chown www-data:www-data /var/www/html/monitor
-```
-
-# Phase 4: Reverse Proxy Configuration
+Phase 4: Reverse Proxy Configuration
 The Nginx configuration remains mostly the same, but ensure you use www-data (the Debian default user) if you modify permissions.
 
 Create config:
-```
-sudo nano /etc/nginx/conf.d/bridge.conf
-```
 
+sudo nano /etc/nginx/conf.d/bridge.conf
 Paste this template (Update the proxy_pass IP to your local home machine's Tailscale IP):
-```
+
 # Nginx
 server {
     listen 80;
@@ -127,13 +125,9 @@ server {
 # Test & Reload:
 sudo nginx -t
 sudo systemctl reload nginx
-```
-
-# Phase 5: Security Hardening (Debian Style)
+Phase 5: Security Hardening (Debian Style)
 Debian typically uses ufw or nftables rather than firewalld.
 
-
-```
 # Firewall (UFW):
 sudo apt install ufw -y
 sudo ufw allow 22/tcp
@@ -141,25 +135,16 @@ sudo ufw allow 80/tcp
 sudo ufw allow 443/tcp
 sudo ufw allow 41641/udp
 sudo ufw enable
-```
+Intrusion Prevention (Fail2Ban): On Debian, Fail2Ban is available directly via apt (no need for pip).
 
-Intrusion Prevention (Fail2Ban):
-On Debian, Fail2Ban is available directly via apt (no need for pip).
-```
 sudo apt install fail2ban -y
 # It starts automatically with a default SSH jail
 sudo systemctl enable fail2ban
-```
-
 SSL (Certbot):
-```
+
 sudo apt install certbot python3-certbot-nginx -y
 sudo certbot --nginx
-```
-
-# Phase 6: Active Monitoring
+Phase 6: Active Monitoring
 Run GoAccess as a daemon to keep the dashboard updated.
 
-```
 sudo goaccess /var/log/nginx/access.log -o /var/www/html/monitor/index.html --log-format=COMBINED --real-time-html --daemonize
-```
