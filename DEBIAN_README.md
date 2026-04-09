@@ -1,5 +1,24 @@
 # HomeLab Gateway: Debian 12 to Local Machine Bridge
 
+# Pre-requisite
+
+```
+1. Create the user
+Switch to root (su -) if you aren't already, then run:
+
+# Replace 'suriya' with your preferred username
+adduser suriya
+
+2. Install Sudo (Debian doesn't always include it)
+apt update && apt install sudo
+
+3. Add your user to the Sudo group
+usermod -aG sudo suriya
+
+4. Switch to your new user
+su - suriya
+```
+
 
 # Phase 1: Resource Optimization (Swap)
 Debian handles swap similarly, but it is critical for 512MB RAM instances to avoid "Out of Memory" (OOM) errors during apt upgrades or Certbot runs.
