@@ -5,17 +5,19 @@
 Debian handles swap similarly, but it is critical for 512MB RAM instances to avoid "Out of Memory" (OOM) errors during apt upgrades or Certbot runs.
 
 ```
-# 1. Create a 1GB swap file
-sudo dd if=/dev/zero of=/swapfile bs=1M count=1024
+# 1. Create a 2GB swap file (1M * 2048 = 2GB)
+sudo dd if=/dev/zero of=/swapfile bs=1M count=2048
+
+# 2. Secure the file (only root should read/write it)
 sudo chmod 600 /swapfile
+
+# 3. Set up the swap area
 sudo mkswap /swapfile
+
+# 4. Enable the swap
 sudo swapon /swapfile
 
-# 2. Persist swap across reboots
-
-echo '/swapfile swap swap defaults 0 0' | sudo tee -a /etc/fstab
-
-# 3. Verify
+# 5. Verify the new size
 free -h
 ```
 
