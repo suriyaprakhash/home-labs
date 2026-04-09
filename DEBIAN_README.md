@@ -48,7 +48,22 @@ The installation script works perfectly on Debian.
 curl -fsSL https://tailscale.com/install.sh | sh
 
 # Start and Authenticate
-sudo tailscale up
+sudo tailscale up --advertise-exit-node
+```
+
+Now on the vps to allow forward so that you could use it as a exit node
+```
+# Update sysctl.conf
+sudo nano /etc/sysctl.conf
+
+# uncomment the following line
+net.ipv4.ip_forward=1
+net.ipv6.conf.all.forwarding=1
+
+# Save and exit (Ctrl+O, Enter, Ctrl+X).
+
+# Force apply
+sudo sysctl -p
 ```
 
 
@@ -68,23 +83,25 @@ sudo chown www-data:www-data /var/www/html/monitor
 # Phase 4: Reverse Proxy Configuration
 The Nginx configuration remains mostly the same, but ensure you use www-data (the Debian default user) if you modify permissions.
 
-Create config: sudo nano /etc/nginx/conf.d/bridge.conf
+Create config:
+```
+sudo nano /etc/nginx/conf.d/bridge.conf
+```
 
 Paste this template (Update the proxy_pass IP to your local home machine's Tailscale IP):
-
 ```
 # Nginx
 server {
     listen 80;
-    server_name _; 
+    server_name _;
 
     location / {
-        proxy_pass http://100.x.y.z:8080; 
+        proxy_pass http://100.82.34.11:8080;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
-        
+
         # Buffer tweaks for 512MB RAM
         proxy_buffer_size 12k;
         proxy_buffers 4 24k;
@@ -94,10 +111,18 @@ server {
     location /monitor {
         alias /var/www/html/monitor/;
         index index.html;
+
+        # Essential for Real-Time GoAccess
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "Upgrade";
+
         allow 100.0.0.0/8; # Tailscale Only
         deny all;
     }
 }
+
+# Ctrl + o, Enter, Ctrl + x to save and exit
 
 # Test & Reload:
 sudo nginx -t
