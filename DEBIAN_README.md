@@ -109,12 +109,16 @@ server {
     auth_basic_user_file /etc/nginx/.htpasswd;
 
     location / {
-        proxy_pass http://100.82.34.11:8080;
+	# Force authentication here as well
+        auth_basic "Restricted Access";
+        auth_basic_user_file /etc/nginx/.htpasswd;
+
+        proxy_pass http://100.82.34.11:8080; 
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
-
+        
         # Buffer tweaks for 512MB RAM
         proxy_buffer_size 12k;
         proxy_buffers 4 24k;
@@ -122,6 +126,11 @@ server {
     }
 
     location /monitor {
+
+	# Force authentication here as well
+        auth_basic "Restricted Access";
+        auth_basic_user_file /etc/nginx/.htpasswd;
+
         alias /var/www/html/monitor/;
         index index.html;
 
@@ -130,8 +139,8 @@ server {
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection "Upgrade";
 
-        allow 100.82.34.11; # mac           
-        allow 100.10.196.108; # phone
+        allow 100.82.34.11; # mac
+	allow 100.10.196.108; # phone
         deny all;
     }
 }
