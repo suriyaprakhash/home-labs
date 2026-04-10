@@ -84,6 +84,14 @@ sudo chown www-data:www-data /var/www/html/monitor
 # Phase 4: Reverse Proxy Configuration
 The Nginx configuration remains mostly the same, but ensure you use www-data (the Debian default user) if you modify permissions.
 
+
+First secure nginx using htpassd util,
+```
+sudo apt update
+sudo apt install apache2-utils
+sudo htpasswd -c /etc/nginx/.htpasswd your_username
+```
+
 Create config:
 ```
 sudo nano /etc/nginx/conf.d/bridge.conf
@@ -95,6 +103,10 @@ Paste this template (Update the proxy_pass IP to your local home machine's Tails
 server {
     listen 80;
     server_name _;
+
+    # These two lines protect the ENTIRE server
+    auth_basic "Restricted Access - Home Lab";
+    auth_basic_user_file /etc/nginx/.htpasswd;
 
     location / {
         proxy_pass http://100.82.34.11:8080;
@@ -118,7 +130,8 @@ server {
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection "Upgrade";
 
-        allow 100.0.0.0/8; # Tailscale Only
+        allow 100.82.34.11; # mac           
+        allow 100.10.196.108; # phone
         deny all;
     }
 }
