@@ -101,7 +101,8 @@ Paste this template (Update the proxy_pass IP to your local home machine's Tails
 ```
 # Nginx
 server {
-    listen 80;
+    listen 80 default_server;
+    listen [::]:80 default_server;
     server_name _;
 
     # These two lines protect the ENTIRE server
