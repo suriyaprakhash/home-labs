@@ -153,6 +153,15 @@ sudo nginx -t
 sudo systemctl reload nginx
 ```
 
+If you see any error realated to multiple default server, comment the line in 
+
+```
+sudo nano /etc/nginx/nginx.conf
+
+# comment the following where default is defined
+# include /etc/nginx/sites-enabled/*;
+```
+
 # Phase 5: Security Hardening (Debian Style)
 Debian typically uses ufw or nftables rather than firewalld.
 
