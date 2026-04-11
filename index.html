@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Labs | Suriya Prakhash</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #ffffff;
+            --text-main: #1a1a1a;
+            --text-muted: #666666;
+            --accent: #000000;
+            --border: #eeeeee;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        header {
+            padding: 80px 10% 40px 10%;
+            border-bottom: 1px solid var(--border);
+        }
+
+        h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 3rem;
+            font-weight: 400;
+            margin: 0;
+            letter-spacing: -1px;
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            color: var(--text-muted);
+            margin-top: 10px;
+            font-style: italic;
+            font-family: 'Playfair Display', serif;
+        }
+
+        .container {
+            padding: 60px 10%;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 40px;
+        }
+
+        .lab-card {
+            text-decoration: none;
+            color: inherit;
+            transition: all 0.3s ease;
+            display: block;
+            border: 1px solid transparent;
+        }
+
+        .lab-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .lab-card:hover .card-title {
+            text-decoration: underline;
+        }
+
+        .card-category {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--text-muted);
+            margin-bottom: 15px;
+            display: block;
+        }
+
+        .card-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.5rem;
+            margin: 0 0 10px 0;
+        }
+
+        .card-desc {
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            font-weight: 300;
+        }
+
+        .status-dot {
+            height: 8px;
+            width: 8px;
+            background-color: #2ecc71;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 5px;
+        }
+
+        footer {
+            padding: 100px 10% 40px 10%;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-align: center;
+            letter-spacing: 1px;
+        }
+
+        @media (max-width: 768px) {
+            header, .container { padding-left: 5%; padding-right: 5%; }
+            h1 { font-size: 2.2rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Engineering Labs</h1>
+        <div class="subtitle">Experimental projects, real-time metrics, and architecture drafts.</div>
+    </header>
+
+    <main class="container">
+        
+        <a href="/monitor/" class="lab-card">
+            <span class="card-category">Operations</span>
+            <h2 class="card-title">GoAccess Monitor</h2>
+            <p class="card-desc">Real-time traffic analysis and server health metrics for the home lab environment.</p>
+            <span class="card-desc"><span class="status-dot"></span> Live System</span>
+        </a>
+
+        <a href="/labs/traffic" class="lab-card">
+            <span class="card-category">Simulation</span>
+            <h2 class="card-title">Chennai Traffic Sim</h2>
+            <p class="card-desc">Modeling intersection transitions and one-way flow patterns using the SUMO engine.</p>
+        </a>
+
+        <a href="#" class="lab-card">
+            <span class="card-category">Backend</span>
+            <h2 class="card-title">Kafka Mesh Explorer</h2>
+            <p class="card-desc">A visualizer for producer-consumer patterns within Spring Boot microservices.</p>
+        </a>
+
+    </main>
+
+    <footer>
+        &copy; 2026 SURIYA PRAKHASH DEENADAYALAN. CHENNAI, INDIA.
+    </footer>
+
+</body>
+</html>
