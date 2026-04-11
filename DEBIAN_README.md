@@ -70,21 +70,23 @@ sudo sysctl -p
 # Phase 3: Web Server & Monitoring
 Debian's package names are slightly different for GoAccess dependencies.
 
+
+## 1. Install Nginx, GoAccess, Nginx UI
 ```
-# 1. Install Nginx, GoAccess, Nginx UI
 sudo apt update
 sudo apt install nginx goaccess -y
 curl -L -s curl -L https://cloud.nginxui.com/install.sh | sudo bash -s -- install
-
-# 2. Prepare Monitoring Directory
+```
+## 2. Prepare Monitoring Directory
+```
 sudo mkdir -p /var/www/html/monitor
 sudo chown www-data:www-data /var/www/html/monitor
-
-# 3. Let the nginx-ui start
+```
+## 3. Let the nginx-ui start
 ```
 sudo systemctl start nginx-ui
 ```
-# 4. Install certbot
+## 4. Install certbot
 ```
 sudo apt install certbot python3-certbot-nginx -y
 ```
