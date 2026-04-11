@@ -87,13 +87,53 @@ sudo systemctl start nginx-ui
 # Phase 4: Reverse Proxy Configuration
 The Nginx configuration remains mostly the same, but ensure you use www-data (the Debian default user) if you modify permissions.
 
-
+## Secure nginx using Apache2Utils
 First secure nginx using htpassd util,
 ```
 sudo apt update
 sudo apt install apache2-utils
 sudo htpasswd -c /etc/nginx/.htpasswd your_username
 ```
+## When using sites-available (Recommended)
+
+Place the nginx config within /etc/nginx/site-avaialbe/labs.suriyaprakhash.com,
+```
+sudo nano /etc/nginx/sites-available/labs.suriyaprakhash.com
+```
+Place the following,
+```
+server {
+    listen 80;
+    server_name labs.suriyaprakhash.com;
+
+    root /var/www/labs.suriyaprakhash.com;
+    index index.html;
+
+    location / {
+        try_files $uri $uri/ =404;
+    }
+}
+```
+and make sure the `labs html` is placed under `labs.suriyaprakhash.com` folder.
+
+Now we would need to link the *sites-availble* to **sites-enabled**
+```
+sudo ln -s /etc/nginx/sites-available/labs.suriyaprakhash.com /etc/nginx/sites-enabled/
+```
+
+Now try to test and reload nginx
+```
+sudo nginx -t
+sudo systemctl reload nginx
+```
+To unlink the syslink
+```
+sudo unlink /etc/nginx/sites-enabled/labs.suriyaprakhash.com
+```
+
+
+
+## When not using sites-available
 
 Create config:
 ```
