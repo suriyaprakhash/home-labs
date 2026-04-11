@@ -74,11 +74,14 @@ Debian's package names are slightly different for GoAccess dependencies.
 # 1. Install Nginx, GoAccess, Nginx UI
 sudo apt update
 sudo apt install nginx goaccess -y
-# curl -L -s https://githubusercontent.com | sudo bash -s -- install
+curl -L -s curl -L https://cloud.nginxui.com/install.sh | sudo bash -s -- install
 
 # 2. Prepare Monitoring Directory
 sudo mkdir -p /var/www/html/monitor
 sudo chown www-data:www-data /var/www/html/monitor
+
+# 3. Let the nginx-ui start
+sudo systemctl start nginx-ui
 ```
 
 # Phase 4: Reverse Proxy Configuration
@@ -101,11 +104,11 @@ Paste this template (Update the proxy_pass IP to your local home machine's Tails
 ```
 # Nginx
 server {
-    listen 80 default_server;
-    listen [::]:80 default_server;
+    listen 80;
+    listen [::]:80;
     server_name _;
 
-	# Define the root directory for the homepage
+    # Define the root directory for the homepage
     root /var/www/html;
     # Define which file to look for first
     index index.html index.htm;
@@ -118,7 +121,7 @@ server {
 
     location /labs {
 
-		# Force authentication here as well
+        # Force authentication here as well
         #auth_basic "Restricted Access";
         #auth_basic_user_file /etc/nginx/.htpasswd;
 
@@ -135,9 +138,22 @@ server {
         proxy_busy_buffers_size 24k;
     }
 
+    location /ui {
+        proxy_pass http://127.0.0.1:9000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+        # WebSocket support (required for the Web Terminal feature)
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+    }
+
     location /monitor {
 
-		# Force authentication for goaccess
+        # Force authentication for goaccess
         auth_basic "Restricted Access";
         auth_basic_user_file /etc/nginx/.htpasswd;
 
@@ -150,7 +166,7 @@ server {
         proxy_set_header Connection "Upgrade";
 
         #allow 100.82.34.11; # mac
-		#allow 100.10.196.108; # phone
+        #allow 100.10.196.108; # phone
         #deny all;
     }
 }
@@ -162,13 +178,21 @@ sudo nginx -t
 sudo systemctl reload nginx
 ```
 
-If you see any error realated to multiple default server, comment the line in 
+For default server config, check
 
 ```
 sudo nano /etc/nginx/nginx.conf
 
-# comment the following where default is defined
-# include /etc/nginx/sites-enabled/*;
+# make sure sites-enabled is avalble for nginx-ui
+include /etc/nginx/sites-enabled/*;
+```
+
+Change app.ini for nginx-ui to let 9000, /usr/local/etc/nginx-ui/app.ini
+```
+[server]
+HttpIp = 127.0.0.1  # Change to 127.0.0.1 to hide it from the public
+HttpPort = 9000
+BaseUrl = /ui       # <--- THIS IS THE CRITICAL LINE
 ```
 
 # Phase 5: Security Hardening (Debian Style)
