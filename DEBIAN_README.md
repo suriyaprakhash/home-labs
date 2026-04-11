@@ -81,8 +81,14 @@ sudo mkdir -p /var/www/html/monitor
 sudo chown www-data:www-data /var/www/html/monitor
 
 # 3. Let the nginx-ui start
+```
 sudo systemctl start nginx-ui
 ```
+# 4. Install certbot
+```
+sudo apt install certbot python3-certbot-nginx -y
+```
+
 
 # Phase 4: Reverse Proxy Configuration
 The Nginx configuration remains mostly the same, but ensure you use www-data (the Debian default user) if you modify permissions.
@@ -95,6 +101,8 @@ sudo apt install apache2-utils
 sudo htpasswd -c /etc/nginx/.htpasswd your_username
 ```
 ## When using sites-available (Recommended)
+
+### labs.suriyaprakhash.com
 
 Place the nginx config within /etc/nginx/site-avaialbe/labs.suriyaprakhash.com,
 ```
@@ -131,7 +139,66 @@ To unlink the syslink
 sudo unlink /etc/nginx/sites-enabled/labs.suriyaprakhash.com
 ```
 
+Install SSL cert using
+```
+sudo certbot --nginx
+```
 
+### nginxui.labs.suriyaprakhash.com
+
+Make sure nginx-ui is running, 
+```
+sudo systemctl restart nginx-ui
+```
+
+Place the nginx config within /etc/nginx/site-avaialbe/nginxui.labs.suriyaprakhash.com,
+```
+sudo nano /etc/nginx/sites-available/nginxui.labs.suriyaprakhash.com
+```
+Place the following,
+```
+server {
+    listen 80;
+    server_name nginxui.labs.suriyaprakhash.com;
+
+    location / {
+        proxy_pass http://127.0.0.1:9000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+```
+
+Now we would need to link the *sites-availble* to **sites-enabled**
+```
+sudo ln -s /etc/nginx/sites-available/nginxui.labs.suriyaprakhash.com /etc/nginx/sites-enabled/
+```
+
+Now try to test and reload nginx
+```
+sudo nginx -t
+sudo systemctl reload nginx
+```
+To unlink the syslink
+```
+sudo unlink /etc/nginx/sites-enabled/labs.suriyaprakhash.com
+```
+
+Install SSL cert using
+```
+sudo certbot --nginx
+```
+
+### goaccess.labs.suriyaprakhash.com
+
+PENDING CONFIG CHANGES
+
+Make sure goaccess is running
+```
+sudo goaccess /var/log/nginx/access.log -o /var/www/html/monitor/index.html --log-format=COMBINED --real-time-html --daemonize
+```
 
 ## When not using sites-available
 
