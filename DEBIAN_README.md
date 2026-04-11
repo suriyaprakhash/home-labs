@@ -105,10 +105,6 @@ server {
     listen [::]:80 default_server;
     server_name _;
 
-    # These two lines protect the ENTIRE server
-    auth_basic "Restricted Access - Home Lab";
-    auth_basic_user_file /etc/nginx/.htpasswd;
-
     location / {
         # First attempt to serve request as file, then
         # as directory, then fall back to displaying a 404.
@@ -122,6 +118,7 @@ server {
         #auth_basic_user_file /etc/nginx/.htpasswd;
 
         proxy_pass http://100.82.34.11:8080;
+
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -135,9 +132,9 @@ server {
 
     location /monitor {
 
-		# Force authentication here as well
-        #auth_basic "Restricted Access";
-        #auth_basic_user_file /etc/nginx/.htpasswd;
+		# Force authentication for goaccess
+        auth_basic "Restricted Access";
+        auth_basic_user_file /etc/nginx/.htpasswd;
 
         alias /var/www/html/monitor/;
         index index.html;
@@ -147,9 +144,9 @@ server {
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection "Upgrade";
 
-        allow 100.82.34.11; # mac
-		allow 100.10.196.108; # phone
-        deny all;
+        #allow 100.82.34.11; # mac
+		#allow 100.10.196.108; # phone
+        #deny all;
     }
 }
 
