@@ -105,6 +105,11 @@ server {
     listen [::]:80 default_server;
     server_name _;
 
+	# Define the root directory for the homepage
+    root /var/www/html;
+    # Define which file to look for first
+    index index.html index.htm;
+
     location / {
         # First attempt to serve request as file, then
         # as directory, then fall back to displaying a 404.
