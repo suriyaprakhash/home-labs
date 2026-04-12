@@ -67,41 +67,50 @@ sudo sysctl -p
 ```
 
 
-# Phase 3: Web Server & Monitoring
+# Phase 3: Web Server & Monitoring setup
 Debian's package names are slightly different for GoAccess dependencies.
 
+## Installation & Setup
 
-## 1. Install Nginx, GoAccess, Nginx UI
+### Setup Nginx
 ```
 sudo apt update
-sudo apt install nginx goaccess -y
+sudo apt install nginx -y
+```
+
+### Setup Nginx UI
+Download and install
+```
 curl -L -s curl -L https://cloud.nginxui.com/install.sh | sudo bash -s -- install
 ```
-## 2. Prepare Monitoring Directory
-```
-sudo mkdir -p /var/www/html/monitor
-sudo chown www-data:www-data /var/www/html/monitor
-```
-## 3. Let the nginx-ui start
+Now to start,
 ```
 sudo systemctl start nginx-ui
 ```
-## 4. Install certbot
+
+### Install GoAccess
+```
+sudo apt update
+sudo apt install goaccess -y
+```
+Deamon isnt started yet, check configuration for more info
+
+## Install certbot
 ```
 sudo apt install certbot python3-certbot-nginx -y
 ```
 
-
-# Phase 4: Reverse Proxy Configuration
-The Nginx configuration remains mostly the same, but ensure you use www-data (the Debian default user) if you modify permissions.
-
-## Secure nginx using Apache2Utils
+## Install Apache2Utils
 First secure nginx using htpassd util,
 ```
 sudo apt update
 sudo apt install apache2-utils
 sudo htpasswd -c /etc/nginx/.htpasswd your_username
 ```
+
+# Phase 4: Reverse Proxy Configuration
+The Nginx configuration remains mostly the same, but ensure you use www-data (the Debian default user) if you modify permissions.
+
 ## When using sites-available (Recommended)
 
 ### labs.suriyaprakhash.com
@@ -195,11 +204,62 @@ sudo certbot --nginx
 
 ### goaccess.labs.suriyaprakhash.com
 
-PENDING CONFIG CHANGES
+Make sure the monitoring directory is set,
+```
+sudo mkdir -p /var/www/goaccess.labs.suriyaprakhash.com/monitor
+sudo chown www-data:www-data /var/www/goaccess.labs.suriyaprakhash.com/monitor
+```
 
 Make sure goaccess is running
 ```
-sudo goaccess /var/log/nginx/access.log -o /var/www/html/monitor/index.html --log-format=COMBINED --real-time-html --daemonize
+sudo goaccess /var/log/nginx/access.log -o /var/www/goaccess.labs.suriyaprakhash.com/monitor/index.html --log-format=COMBINED --real-time-html --daemonize
+```
+
+Place the nginx config within /etc/nginx/site-avaialbe/goaccess.labs.suriyaprakhash.com,
+```
+sudo nano /etc/nginx/sites-available/goaccess.labs.suriyaprakhash.com
+```
+Place the following,
+```
+server {
+    listen 80;
+    server_name goaccess.labs.suriyaprakhash.com;
+
+    # Force authentication for goaccess
+    auth_basic "Restricted Access";
+    auth_basic_user_file /etc/nginx/.htpasswd;
+
+    root /var/www/goaccess.labs.suriyaprakhash.com/monitor/;
+    index index.html;
+
+    # Essential for Real-Time GoAccess
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection "Upgrade";
+
+    #allow 100.82.34.11; # mac
+    #allow 100.10.196.108; # phone
+    #deny all;
+
+    location / {
+        try_files $uri $uri/ =404;
+    }
+}
+```
+
+To link it,
+```
+sudo ln -s /etc/nginx/sites-available/goaccess.labs.suriyaprakhash.com /etc/nginx/sites-enabled/
+```
+
+Now try to test and reload nginx
+```
+sudo nginx -t
+sudo systemctl reload nginx
+```
+Install SSL cert using
+```
+sudo certbot --nginx
 ```
 
 ## When not using sites-available
