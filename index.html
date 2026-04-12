@@ -98,6 +98,11 @@
             margin-right: 5px;
         }
 
+        .nav-link:hover {
+            background-color: var(--accent);
+            color: #fff !important;
+        }
+
         footer {
             padding: 100px 10% 40px 10%;
             font-size: 0.8rem;
@@ -109,26 +114,39 @@
         @media (max-width: 768px) {
             header, .container { padding-left: 5%; padding-right: 5%; }
             h1 { font-size: 2.2rem; }
+            .header-flex { flex-direction: column; gap: 20px; }
         }
     </style>
 </head>
 <body>
 
-    <header>
-        <h1>Engineering Labs</h1>
-        <div class="subtitle">Experimental projects, real-time metrics, and architecture drafts.</div>
+    <header class="header-flex" style="display: flex; justify-content: space-between; align-items: flex-start; padding: 80px 10% 40px 10%; border-bottom: 1px solid var(--border);">
+        <div>
+            <h1>Engineering Labs</h1>
+            <div class="subtitle">Experimental projects, real-time metrics, and architecture drafts.</div>
+        </div>
+        <a href="https://suriyaprakhash.com" class="nav-link" style="text-decoration: none; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 2px; color: var(--text-muted); border: 1px solid var(--border); padding: 8px 15px; transition: all 0.3s ease;">
+            Main Site &rarr;
+        </a>
     </header>
 
     <main class="container">
         
-        <a href="/monitor/" class="lab-card">
+        <a href="https://goaccess.labs.suriyaprakhash.com" class="lab-card">
             <span class="card-category">Operations</span>
             <h2 class="card-title">GoAccess Monitor</h2>
             <p class="card-desc">Real-time traffic analysis and server health metrics for the home lab environment.</p>
             <span class="card-desc"><span class="status-dot"></span> Live System</span>
         </a>
 
-        <a href="/labs/traffic" class="lab-card">
+        <a href="https://nginxui.labs.suriyaprakhash.com" class="lab-card">
+            <span class="card-category">Infrastructure</span>
+            <h2 class="card-title">Nginx UI</h2>
+            <p class="card-desc">Advanced configuration management and real-time dashboard for Nginx server instances.</p>
+            <span class="card-desc"><span class="status-dot"></span> Live System</span>
+        </a>
+
+        <a href="#" class="lab-card">
             <span class="card-category">Simulation</span>
             <h2 class="card-title">Chennai Traffic Sim</h2>
             <p class="card-desc">Modeling intersection transitions and one-way flow patterns using the SUMO engine.</p>
@@ -141,9 +159,8 @@
         </a>
 
     </main>
-
     <footer>
-        &copy; 2026 SURIYA PRAKHASH DEENADAYALAN. CHENNAI, INDIA.
+        &copy; 2026 <a href="https://suriyaprakhash.com" style="color: inherit; text-decoration: underline;">SURIYA PRAKHASH DEENADAYALAN</a>.
     </footer>
 
 </body>
