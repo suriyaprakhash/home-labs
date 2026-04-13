@@ -262,6 +262,46 @@ Install SSL cert using
 sudo certbot --nginx
 ```
 
+### stash.labs.suriyaprakhash.com
+
+Make sure the NAS is running,
+
+Place the nginx config within /etc/nginx/site-avaialbe/stash.labs.suriyaprakhash.com,
+```
+sudo nano /etc/nginx/sites-available/stash.labs.suriyaprakhash.com
+```
+Place the following,
+```
+server {
+    listen 80;
+    server_name stash.labs.suriyaprakhash.com;
+
+    location / {
+        proxy_pass http://100.96.220.49:9999;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+```
+
+Now we would need to link the *sites-availble* to **sites-enabled**
+```
+sudo ln -s /etc/nginx/sites-available/stash.labs.suriyaprakhash.com /etc/nginx/sites-enabled/
+```
+
+Now try to test and reload nginx
+```
+sudo nginx -t
+sudo systemctl reload nginx
+```
+
+Install SSL cert using
+```
+sudo certbot --nginx
+```
+
 ## When not using sites-available
 
 Create config:
