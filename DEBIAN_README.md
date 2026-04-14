@@ -212,7 +212,14 @@ sudo chown www-data:www-data /var/www/goaccess.labs.suriyaprakhash.com/monitor
 
 Make sure goaccess is running
 ```
-sudo goaccess /var/log/nginx/access.log -o /var/www/goaccess.labs.suriyaprakhash.com/monitor/index.html --log-format=COMBINED --real-time-html --daemonize
+sudo goaccess /var/log/nginx/access.log \
+-o /var/www/goaccess.labs.suriyaprakhash.com/monitor/index.html \
+--log-format=COMBINED \
+--real-time-html \
+--ws-url=wss://goaccess.labs.suriyaprakhash.com/ws \
+--addr=127.0.0.1 \
+--port=7890 \
+--daemonize
 ```
 
 Place the nginx config within /etc/nginx/site-avaialbe/goaccess.labs.suriyaprakhash.com,
@@ -232,17 +239,32 @@ server {
     root /var/www/goaccess.labs.suriyaprakhash.com/monitor/;
     index index.html;
 
-    # Essential for Real-Time GoAccess
-    proxy_http_version 1.1;
-    proxy_set_header Upgrade $http_upgrade;
-    proxy_set_header Connection "Upgrade";
-
     #allow 100.82.34.11; # mac
     #allow 100.10.196.108; # phone
     #deny all;
 
     location / {
         try_files $uri $uri/ =404;
+    }
+
+    location /ws {
+        # Disable auth for the WebSocket path specifically
+        auth_basic off;
+    
+        proxy_pass http://127.0.0.1:7890;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "Upgrade";
+    
+        # Ensure the real IP is passed through
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    
+        proxy_read_timeout 7d;
+        proxy_buffering off;
+    
     }
 }
 ```
